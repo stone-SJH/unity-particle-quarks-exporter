@@ -1,0 +1,39 @@
+{
+  "name": "unity-particle-quarks-runtime",
+  "version": "0.3.2",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.18.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "./dist/vfx.js",
+  "module": "./dist/vfx.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/vfx.js"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "scripts": {
+    "build": "vite build && tsc -p tsconfig.build.json --emitDeclarationOnly",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "quarks.core": "0.17.1",
+    "three.quarks": "0.17.1"
+  },
+  "peerDependencies": {
+    "three": "0.185.0"
+  }
+}

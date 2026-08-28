@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "unity_particle_quarks_pipeline.config.v1",
+  "outputRoot": "./exports/unity-vfx",
+  "mode": "strict",
+  "runtimeProfile": "extended",
+  "maxTextureSize": 1024,
+  "effects": [
+    {
+      "id": "water-impact",
+      "prefabPath": "Assets/VFX/WaterImpact.prefab",
+      "includeParticleSystemPaths": [],
+      "excludeParticleSystemPaths": [],
+      "mode": "strict",
+      "maxTextureSize": 512
+    }
+  ]
+}

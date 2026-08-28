@@ -1,0 +1,17 @@
+{
+  "name": "com.yahaha.particle-quarks-exporter",
+  "version": "0.3.2",
+  "displayName": "Yahaha Unity ParticleSystem to Quarks Exporter",
+  "description": "Exports Unity ParticleSystem prefabs to deterministic stock Three Quarks Object3D JSON with stock and extended runtime profiles.",
+  "unity": "2022.3",
+  "keywords": [
+    "yahaha",
+    "particles",
+    "quarks",
+    "threejs",
+    "vfx-export"
+  ],
+  "author": {
+    "name": "Yahaha"
+  }
+}
