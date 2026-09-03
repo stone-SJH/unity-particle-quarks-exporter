@@ -19,8 +19,8 @@ The exporter can write either profile without a browser dependency:
 
 | Export profile | Unity-side requirement | Browser-side requirement |
 | --- | --- | --- |
-| `stock` | This UPM package | `three@0.185.0`, `three.quarks@0.17.1`, `quarks.core@0.17.1` |
-| `extended` (paired) | This UPM package | The same stock packages plus `unity-particle-quarks-runtime@0.3.3` |
+| `stock` | This UPM package | `three@>=0.182.0 <0.186.0`, `three.quarks@0.17.1`, `quarks.core@0.17.1` |
+| `extended` (paired) | This UPM package | The same stock packages plus `unity-particle-quarks-runtime@0.3.4` |
 
 Choose `stock` when the manifest has no required companion extension. Choose
 `extended` when the manifest requires `unity_particle_paired_semantics@1`; the
@@ -38,11 +38,17 @@ the Unity semantics were preserved.
 
 ### Browser runtime
 
-- Three.js `0.185.0` as the application peer dependency.
+- Three.js `>=0.182.0 <0.186.0` as the application peer dependency.
 - `three.quarks@0.17.1` and `quarks.core@0.17.1` for both profiles.
-- `unity-particle-quarks-runtime@0.3.3` only for paired/extended
+- `unity-particle-quarks-runtime@0.3.4` only for paired/extended
   manifests.
 - Node.js `>=18.18.0` only when using the package build/test tooling.
+
+The supported Three.js range follows the `three.quarks@0.17.1` lower bound and
+is tested at `0.182.0`, `0.183.2`, `0.184.0`, and `0.185.1`. Three.js `r186`
+is an explicit compatibility gate because it adds a new `Object3D.dispose()`
+contract; it will not enter the peer range until Quarks disposal and the full
+runtime matrix pass against that release.
 
 ## Components
 
@@ -101,20 +107,20 @@ runtime manifest so stale effects cannot be loaded accidentally.
 
 ## Browser runtime
 
-The runtime package is `unity-particle-quarks-runtime` and requires
-Three.js `0.185.0`. It supports stock and extended profiles:
+The runtime package is `unity-particle-quarks-runtime` and supports Three.js
+`>=0.182.0 <0.186.0`. It supports stock and extended profiles:
 
 ```sh
-npm install unity-particle-quarks-runtime@0.3.3 three@0.185.0
+npm install unity-particle-quarks-runtime@0.3.4 three@0.185.1
 ```
 
-If `0.3.3` has not yet reached the configured registry, build and install the
+If `0.3.4` has not yet reached the configured registry, build and install the
 package from this source checkout:
 
 ```sh
 npm ci
 npm pack -w unity-particle-quarks-runtime
-npm install ./unity-particle-quarks-runtime-0.3.3.tgz three@0.185.0
+npm install ./unity-particle-quarks-runtime-0.3.4.tgz three@0.185.1
 ```
 
 ```ts
@@ -142,7 +148,8 @@ extension. The extended profile is the default and handles
 
 The declared editor tuples are Unity `2022.3.52f1` and Unity `6000.3.22f1`
 (Unity 6.3 LTS), each with Built-in or URP. HDRP is `source-only`. Browser
-runtime requirements are Node.js `>=18.18.0`, Three.js `0.185.0`, and
+runtime requirements are Node.js `>=18.18.0`, Three.js
+`>=0.182.0 <0.186.0`, and
 `three.quarks`/`quarks.core` `0.17.1`. See the
 [`compatibility matrix`](docs/compatibility-matrix.md) for module-level
 behavior and fallback details.

@@ -3155,6 +3155,16 @@ describe('VFX runtime', () => {
   it('filters Trail history using Unity minVertexDistance after simulation', async () => {
     const source = unityTrailFixture({ minVertexDistance: 0.15 });
     const emitter = source.object.children[0];
+    emitter.ps.shape = {
+      type: 'cone',
+      radius: 0,
+      arc: Math.PI * 2,
+      thickness: 0,
+      angle: 0,
+      mode: 0,
+      spread: 0,
+      speed: { type: 'ConstantValue', value: 1 }
+    };
     emitter.ps.startSpeed = { type: 'ConstantValue', value: 10 };
     const runtime = await readyRuntime({ prewarm: 0, max: 1 }, 'drop-newest', undefined, source);
     const handle = runtime.spawn('water-impact') as any;

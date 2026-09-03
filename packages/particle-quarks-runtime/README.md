@@ -6,10 +6,15 @@ Unity ParticleSystem to Quarks exporter. It uses `three.quarks` and
 
 ## Prerequisites
 
-Both profiles require Three.js `0.185.0`, `three.quarks@0.17.1` and
+Both profiles require Three.js `>=0.182.0 <0.186.0`, `three.quarks@0.17.1` and
 `quarks.core@0.17.1`. Node.js `>=18.18.0` is required only for package
 build/test tooling. The exporter input must come from Unity `2022.3.52f1` or
 Unity 6.3 `6000.3.22f1` on Built-in or URP; HDRP is `source-only`.
+
+The Three.js lower bound follows `three.quarks@0.17.1`. CI exercises Three.js
+`0.182.0`, `0.183.2`, `0.184.0`, and `0.185.1`, including browser lifecycle
+checks at both range boundaries. Three.js `r186` is excluded until the new
+`Object3D.dispose()` contract is supported and the same matrix passes.
 
 ### Stock profile
 
@@ -21,7 +26,7 @@ the companion runtime package.
 
 Use `runtimeProfile: "extended"` (the default) when the manifest requires
 `unity_particle_paired_semantics@1`. Install
-`unity-particle-quarks-runtime@0.3.3` in addition to the stock packages.
+`unity-particle-quarks-runtime@0.3.4` in addition to the stock packages.
 The companion adapter is required for the extended behavior; a stock runtime
 rejects a manifest that declares this required extension.
 
@@ -66,12 +71,12 @@ Omitting `runtimeProfile` keeps the compatibility default `extended`.
 Install the published package with:
 
 ```sh
-npm install unity-particle-quarks-runtime@0.3.3 three@0.185.0
+npm install unity-particle-quarks-runtime@0.3.4 three@0.185.1
 ```
 
 If the registry release is not available yet, create a tarball from the
 repository root with `npm pack -w unity-particle-quarks-runtime` and install
-the resulting `unity-particle-quarks-runtime-0.3.3.tgz` in the application.
+the resulting `unity-particle-quarks-runtime-0.3.4.tgz` in the application.
 
 ## Manifest
 

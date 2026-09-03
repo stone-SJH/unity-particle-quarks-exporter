@@ -5,7 +5,7 @@ declared in `package.json` and `package-lock.json`:
 
 - `three.quarks` `0.17.1`, MIT License, copyright the three.quarks contributors;
 - `quarks.core` `0.17.1`, MIT License, copyright the Quarks contributors;
-- `three` `0.185.0` is a peer dependency, MIT License, copyright 2010-2026
+- `three` `>=0.182.0 <0.186.0` is a peer dependency, MIT License, copyright 2010-2026
   three.js authors.
 
 No trademark license or patent license is granted by this notice. Unity,

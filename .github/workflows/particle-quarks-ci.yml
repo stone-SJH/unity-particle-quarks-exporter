@@ -38,10 +38,64 @@ jobs:
       - name: Run browser HTTP smoke
         run: npm run verify:browser
       - name: Pack runtime
+        id: pack-runtime
         run: |
           mkdir -p "$RUNNER_TEMP/npm-pack"
           npm pack -w unity-particle-quarks-runtime --pack-destination "$RUNNER_TEMP/npm-pack"
+          PACKAGE_VERSION=$(node -p "require('./packages/particle-quarks-runtime/package.json').version")
+          echo "tarball=$RUNNER_TEMP/npm-pack/unity-particle-quarks-runtime-${PACKAGE_VERSION}.tgz" >> "$GITHUB_OUTPUT"
       - name: Install tarball in a clean project
         run: >-
           npm run verify:package-install --
-          "$RUNNER_TEMP/npm-pack/unity-particle-quarks-runtime-0.3.3.tgz"
+          "${{ steps.pack-runtime.outputs.tarball }}"
+
+  three-compatibility:
+    name: Three ${{ matrix.three-version }} compatibility
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - three-version: 0.182.0
+            types-version: 0.182.0
+            browser: true
+          - three-version: 0.183.2
+            types-version: 0.183.1
+            browser: false
+          - three-version: 0.184.0
+            types-version: 0.184.0
+            browser: false
+          - three-version: 0.185.1
+            types-version: 0.185.1
+            browser: true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Select Three compatibility tuple
+        run: >-
+          npm install --no-save --package-lock=false --ignore-scripts
+          "three@${{ matrix.three-version }}"
+          "@types/three@${{ matrix.types-version }}"
+      - name: Verify selected Three compatibility tuple
+        run: |
+          test "$(node -p "require('./node_modules/three/package.json').version")" = "${{ matrix.three-version }}"
+          test "$(node -p "require('./node_modules/@types/three/package.json').version")" = "${{ matrix.types-version }}"
+      - name: Verify source against Three compatibility tuple
+        run: npm run verify
+      - name: Verify exported runtime lifecycle
+        run: >-
+          npm run verify:runtime-load --
+          packages/particle-quarks-runtime/test/fixtures/exported-interop/runtime-manifest.json
+          --profile extended
+      - name: Install Chromium
+        if: matrix.browser
+        run: npx playwright install --with-deps chromium
+      - name: Verify browser lifecycle at range boundary
+        if: matrix.browser
+        run: npm run verify:browser

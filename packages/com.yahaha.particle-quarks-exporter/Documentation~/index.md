@@ -15,9 +15,9 @@ its referenced materials, textures and meshes. HDRP is `source-only`.
 The `stock` profile writes JSON for `three.quarks@0.17.1` and
 `quarks.core@0.17.1`; no companion package is needed in the browser. The
 `extended` profile writes paired metadata and requires
-`unity-particle-quarks-runtime@0.3.3` in the browser when the manifest
+`unity-particle-quarks-runtime@0.3.4` in the browser when the manifest
 requires `unity_particle_paired_semantics@1`. Both profiles use Three.js
-`0.185.0`.
+`>=0.182.0 <0.186.0`.
 
 `unity_particle_paired_semantics@1` is a versioned manifest extension descriptor,
 not a separate Unity or browser dependency. It marks Unity-specific semantic

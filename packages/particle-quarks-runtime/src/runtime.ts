@@ -2733,10 +2733,11 @@ class UnityMeshCameraAlignmentContext {
       // Quarks evaluates behaviors before its per-particle position integration.
       // Face the position that will be rendered at the end of this update, not
       // the stale pre-integration position.
-      this.particleWorldPosition.copy(particle.position).addScaledVector(
-        particle.velocity,
-        delta * ((particle as Particle & { speedModifier?: number }).speedModifier ?? 1)
-      );
+      const displacementScale = delta * ((particle as Particle & { speedModifier?: number }).speedModifier ?? 1);
+      this.particleWorldPosition.copy(particle.position);
+      this.particleWorldPosition.x += particle.velocity.x * displacementScale;
+      this.particleWorldPosition.y += particle.velocity.y * displacementScale;
+      this.particleWorldPosition.z += particle.velocity.z * displacementScale;
       this.emitter.localToWorld(this.particleWorldPosition);
       this.directionWorld.copy(this.cameraPosition).sub(this.particleWorldPosition);
       if (this.directionWorld.lengthSq() <= 1e-24) {

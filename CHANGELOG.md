@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.4 - 2026-09-03
+
+- Expanded the runtime Three.js peer range to `>=0.182.0 <0.186.0`, added
+  r182-r185 compatibility CI, and kept r186 behind an explicit breaking-change
+  gate for the new `Object3D.dispose()` contract.
+
 ## 0.3.3 - 2026-09-03
 
 - Added an exporter-generated `runtime-manifest.json` that can be passed

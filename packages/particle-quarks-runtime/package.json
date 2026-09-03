@@ -1,6 +1,6 @@
 {
   "name": "unity-particle-quarks-runtime",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -42,6 +42,6 @@
     "three.quarks": "0.17.1"
   },
   "peerDependencies": {
-    "three": "0.185.0"
+    "three": ">=0.182.0 <0.186.0"
   }
 }

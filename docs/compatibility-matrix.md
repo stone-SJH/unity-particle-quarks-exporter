@@ -11,14 +11,26 @@ silently.
 
 | Unity editor | Pipeline | Pipeline package lock | Export/runtime | Browser |
 | --- | --- | --- | --- | --- |
-| 2022.3.52f1 | Built-in | SRP none | exporter/runtime 0.3.3 | Three 0.185.0, Quarks 0.17.1 |
-| 2022.3.52f1 | URP | shadergraph 14.0.11, urp-config 14.0.10 | exporter/runtime 0.3.3 | Three 0.185.0, Quarks 0.17.1 |
-| 6000.3.22f1 | Built-in | SRP none | exporter/runtime 0.3.3 | Three 0.185.0, Quarks 0.17.1 |
-| 6000.3.22f1 | URP | shadergraph 17.3.0, urp-config 17.0.3 | exporter/runtime 0.3.3 | Three 0.185.0, Quarks 0.17.1 |
+| 2022.3.52f1 | Built-in | SRP none | exporter 0.3.3 / runtime 0.3.4 | Three `>=0.182.0 <0.186.0`, Quarks 0.17.1 |
+| 2022.3.52f1 | URP | shadergraph 14.0.11, urp-config 14.0.10 | exporter 0.3.3 / runtime 0.3.4 | Three `>=0.182.0 <0.186.0`, Quarks 0.17.1 |
+| 6000.3.22f1 | Built-in | SRP none | exporter 0.3.3 / runtime 0.3.4 | Three `>=0.182.0 <0.186.0`, Quarks 0.17.1 |
+| 6000.3.22f1 | URP | shadergraph 17.3.0, urp-config 17.0.3 | exporter 0.3.3 / runtime 0.3.4 | Three `>=0.182.0 <0.186.0`, Quarks 0.17.1 |
 
 HDRP is `source-only` and is not a declared conversion tuple. Node.js
 `>=18.18.0` is required for the browser runtime tooling. Unity conversion and
 EditMode checks use the declared editor and render-pipeline tuples.
+
+The Three.js range is exercised at `0.182.0`, `0.183.2`, `0.184.0`, and
+`0.185.1`; browser lifecycle checks run at both range boundaries. The matrix
+crosses the released `r185` behavior change where `Object3D.updateWorldMatrix()`
+started honoring `matrixWorldNeedsUpdate` (see the
+[upstream change](https://github.com/mrdoob/three.js/pull/33746)); the runtime
+calls this API and passes on both sides of that boundary. Release `r186` is
+excluded because it adds `Object3D.dispose()` and requires subclasses with
+custom disposal to call `super.dispose()` (see the
+[upstream change](https://github.com/mrdoob/three.js/pull/34141)).
+`three.quarks@0.17.1` predates that contract and has not yet been qualified
+against it.
 
 ## Canonical Rows
 
@@ -50,10 +62,10 @@ EditMode checks use the declared editor and render-pipeline tuples.
 
 ## Runtime Profiles
 
-- `stock` requires `three@0.185.0`, `three.quarks@0.17.1`, and
+- `stock` requires `three@>=0.182.0 <0.186.0`, `three.quarks@0.17.1`, and
   `quarks.core@0.17.1`; companion metadata is inert or uses the row's named
   fallback.
-- `extended` adds `unity-particle-quarks-runtime@0.3.3` and negotiates
+- `extended` adds `unity-particle-quarks-runtime@0.3.4` and negotiates
   `unity_particle_paired_semantics@1` for rows marked `exact_companion_runtime` or
   `approx_companion_runtime`.
 - `fatal_fail` rows such as Collision/Trigger are outside the canonical positive

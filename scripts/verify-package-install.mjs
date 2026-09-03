@@ -7,9 +7,12 @@ import { promisify } from 'node:util';
 const exec = promisify(execFile);
 const rawSpec = process.argv[2];
 if (!rawSpec) {
-  throw new Error('Usage: node scripts/verify-package-install.mjs <package-name@version|package.tgz>');
+  throw new Error(
+    'Usage: node scripts/verify-package-install.mjs <package-name@version|package.tgz> [three-package-spec]'
+  );
 }
 const packageSpec = rawSpec.endsWith('.tgz') ? resolve(rawSpec) : rawSpec;
+const threeSpec = process.argv[3] ?? 'three@0.185.1';
 const projectRoot = await mkdtemp(join(tmpdir(), 'unity-particle-quarks-consumer-'));
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
@@ -25,7 +28,7 @@ try {
     '--no-package-lock',
     '--registry=https://registry.npmjs.org/',
     packageSpec,
-    'three@0.185.0'
+    threeSpec
   ], {
     cwd: projectRoot,
     shell: process.platform === 'win32'
@@ -48,7 +51,7 @@ if (manifest.effects[0]?.id !== 'install-smoke') {
 `);
   await exec(process.execPath, [smokePath], { cwd: projectRoot });
 
-  console.log(JSON.stringify({ status: 'passed', packageSpec: rawSpec }, null, 2));
+  console.log(JSON.stringify({ status: 'passed', packageSpec: rawSpec, threeSpec }, null, 2));
 } finally {
   await rm(projectRoot, { recursive: true, force: true });
 }

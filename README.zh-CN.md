@@ -18,8 +18,8 @@ stock Quarks 无法表示的行为。
 
 | 导出 profile | Unity 侧要求 | 浏览器侧要求 |
 | --- | --- | --- |
-| `stock` | 本 UPM package | `three@0.185.0`、`three.quarks@0.17.1`、`quarks.core@0.17.1` |
-| `extended`（paired） | 本 UPM package | 上述 stock packages，加上 `unity-particle-quarks-runtime@0.3.3` |
+| `stock` | 本 UPM package | `three@>=0.182.0 <0.186.0`、`three.quarks@0.17.1`、`quarks.core@0.17.1` |
+| `extended`（paired） | 本 UPM package | 上述 stock packages，加上 `unity-particle-quarks-runtime@0.3.4` |
 
 当 manifest 没有 required companion extension 时选择 `stock`。当 manifest
 要求 `unity_particle_paired_semantics@1` 时选择 `extended`；此时浏览器应用
@@ -36,11 +36,16 @@ JSON，但会拒绝声明此扩展为 required 的效果，而不会静默声称
 
 ### 浏览器 runtime
 
-- Three.js `0.185.0`，作为应用的 peer dependency。
+- Three.js `>=0.182.0 <0.186.0`，作为应用的 peer dependency。
 - 两种 profile 都需要 `three.quarks@0.17.1` 和 `quarks.core@0.17.1`。
 - 只有 paired/extended manifest 需要
-  `unity-particle-quarks-runtime@0.3.3`。
+  `unity-particle-quarks-runtime@0.3.4`。
 - 只有使用 package build/test 工具时才需要 Node.js `>=18.18.0`。
+
+Three.js 支持范围的下界跟随 `three.quarks@0.17.1`，CI 覆盖 `0.182.0`、
+`0.183.2`、`0.184.0` 和 `0.185.1`。Three.js `r186` 新增了
+`Object3D.dispose()` 契约，因此被作为明确的兼容性门禁；只有 Quarks 的
+dispose 行为和完整 runtime 矩阵在该版本通过后，才会扩大 peer 范围。
 
 ## 组件
 
@@ -96,19 +101,19 @@ JSON，但会拒绝声明此扩展为 required 的效果，而不会静默声称
 
 ## 浏览器 runtime
 
-runtime package 是 `unity-particle-quarks-runtime`，需要 Three.js
-`0.185.0`。它支持 stock 和 extended profile：
+runtime package 是 `unity-particle-quarks-runtime`，支持 Three.js
+`>=0.182.0 <0.186.0`。它支持 stock 和 extended profile：
 
 ```sh
-npm install unity-particle-quarks-runtime@0.3.3 three@0.185.0
+npm install unity-particle-quarks-runtime@0.3.4 three@0.185.1
 ```
 
-如果配置的 registry 尚未提供 `0.3.3`，可从本源码 checkout 构建并安装：
+如果配置的 registry 尚未提供 `0.3.4`，可从本源码 checkout 构建并安装：
 
 ```sh
 npm ci
 npm pack -w unity-particle-quarks-runtime
-npm install ./unity-particle-quarks-runtime-0.3.3.tgz three@0.185.0
+npm install ./unity-particle-quarks-runtime-0.3.4.tgz three@0.185.1
 ```
 
 ```ts
@@ -136,7 +141,8 @@ runtime.release(handle);
 
 声明支持的 editor tuple 为 Unity `2022.3.52f1` 和 Unity `6000.3.22f1`
 （Unity 6.3 LTS），每个版本支持 Built-in 或 URP。HDRP 为 `source-only`。
-浏览器 runtime 要求 Node.js `>=18.18.0`、Three.js `0.185.0` 以及
+浏览器 runtime 要求 Node.js `>=18.18.0`、Three.js
+`>=0.182.0 <0.186.0` 以及
 `three.quarks`/`quarks.core` `0.17.1`。模块级行为和 fallback 详见
 [`兼容性矩阵`](docs/compatibility-matrix.md)。
 
