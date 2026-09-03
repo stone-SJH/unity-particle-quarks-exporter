@@ -21,7 +21,7 @@ the companion runtime package.
 
 Use `runtimeProfile: "extended"` (the default) when the manifest requires
 `unity_particle_paired_semantics@1`. Install
-`unity-particle-quarks-runtime@0.3.2` in addition to the stock packages.
+`unity-particle-quarks-runtime@0.3.3` in addition to the stock packages.
 The companion adapter is required for the extended behavior; a stock runtime
 rejects a manifest that declares this required extension.
 
@@ -63,9 +63,22 @@ const runtime = createVfxRuntime({
 
 Omitting `runtimeProfile` keeps the compatibility default `extended`.
 
+Install the published package with:
+
+```sh
+npm install unity-particle-quarks-runtime@0.3.3 three@0.185.0
+```
+
+If the registry release is not available yet, create a tarball from the
+repository root with `npm pack -w unity-particle-quarks-runtime` and install
+the resulting `unity-particle-quarks-runtime-0.3.3.tgz` in the application.
+
 ## Manifest
 
 Use `unity_particle_quarks_runtime.manifest.v1` for new manifests.
+The Unity exporter writes this contract as `runtime-manifest.json`; its
+separate `manifest.json` is a pipeline diagnostics file and is intentionally
+rejected by `runtime.loadManifest()`.
 
 ```json
 {

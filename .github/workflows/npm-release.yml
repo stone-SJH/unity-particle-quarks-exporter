@@ -1,0 +1,90 @@
+name: npm-release
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: Publish to next, or promote the already verified version to latest
+        required: true
+        type: choice
+        options:
+          - publish-next
+          - promote-latest
+      confirm_version:
+        description: Exact package version to publish or promote
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: unity-particle-quarks-runtime-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24.x
+          registry-url: https://registry.npmjs.org/
+          package-manager-cache: false
+      - name: Verify requested version
+        run: |
+          PACKAGE_VERSION=$(node -p "require('./packages/particle-quarks-runtime/package.json').version")
+          test "$PACKAGE_VERSION" = "${{ inputs.confirm_version }}"
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Verify source and exported runtime lifecycle
+        run: |
+          npm run verify
+          npm run verify:runtime-load -- packages/particle-quarks-runtime/test/fixtures/exported-interop/runtime-manifest.json --profile extended
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Verify browser HTTP lifecycle
+        run: npm run verify:browser
+      - name: Pack release artifact
+        run: |
+          mkdir -p "$RUNNER_TEMP/npm-pack"
+          npm pack -w unity-particle-quarks-runtime --pack-destination "$RUNNER_TEMP/npm-pack"
+      - name: Verify clean tarball install
+        run: >-
+          node scripts/verify-package-install.mjs
+          "$RUNNER_TEMP/npm-pack/unity-particle-quarks-runtime-${{ inputs.confirm_version }}.tgz"
+      - name: Ensure version is not already published
+        if: inputs.action == 'publish-next'
+        run: |
+          if npm view "unity-particle-quarks-runtime@${{ inputs.confirm_version }}" version >/dev/null 2>&1; then
+            echo "Version ${{ inputs.confirm_version }} already exists on npm." >&2
+            exit 1
+          fi
+      - name: Publish candidate to next
+        if: inputs.action == 'publish-next'
+        run: >-
+          npm publish
+          "$RUNNER_TEMP/npm-pack/unity-particle-quarks-runtime-${{ inputs.confirm_version }}.tgz"
+          --access public --provenance --tag next
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Verify exact package from npm
+        run: |
+          for attempt in 1 2 3 4 5; do
+            node scripts/verify-package-install.mjs "unity-particle-quarks-runtime@${{ inputs.confirm_version }}" && exit 0
+            sleep 15
+          done
+          exit 1
+      - name: Promote verified package to latest
+        if: inputs.action == 'promote-latest'
+        run: >-
+          npm dist-tag add
+          "unity-particle-quarks-runtime@${{ inputs.confirm_version }}" latest
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Verify latest tag
+        if: inputs.action == 'promote-latest'
+        run: test "$(npm view unity-particle-quarks-runtime@latest version)" = "${{ inputs.confirm_version }}"

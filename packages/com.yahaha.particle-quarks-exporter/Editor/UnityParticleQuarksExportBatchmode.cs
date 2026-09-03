@@ -14,6 +14,7 @@ namespace UnityParticleQuarksExporter.Editor
     {
         internal const string ConfigSchema = "unity_particle_quarks_pipeline.config.v1";
         private const string ManifestSchema = "unity_particle_quarks_pipeline.manifest.v1";
+        private const string RuntimeManifestSchema = "unity_particle_quarks_runtime.manifest.v1";
         private const string ReportSchema = "unity_particle_quarks_conversion.report.v1";
         private const string UnityPairedSemanticsExtensionId = "unity_particle_paired_semantics";
         private const string UnityPairedSemanticsExtensionVersion = "1";
@@ -106,7 +107,10 @@ namespace UnityParticleQuarksExporter.Editor
                     ? UnityPairedSemanticsExtensions()
                     : Array.Empty<UnityParticleQuarksExtensionDescriptor>();
                 WriteJson(Path.Combine(stagingRoot, "manifest.json"), manifest);
-                ValidateStaging(stagingRoot, manifest);
+                var runtimeManifest = CreateRuntimeManifest(manifest);
+                if (runtimeManifest != null)
+                    WriteJson(Path.Combine(stagingRoot, "runtime-manifest.json"), runtimeManifest);
+                ValidateStaging(stagingRoot, manifest, runtimeManifest);
                 Publish(stagingRoot, outputRoot, backupRoot);
             }
             catch
@@ -388,17 +392,48 @@ namespace UnityParticleQuarksExporter.Editor
             return UnityParticleQuarksStableId.Hash(builder.ToString());
         }
 
-        private static void ValidateStaging(string stagingRoot, UnityParticleQuarksPipelineManifest manifest)
+        internal static UnityParticleQuarksRuntimeManifest CreateRuntimeManifest(UnityParticleQuarksPipelineManifest manifest)
+        {
+            if (manifest == null || manifest.effects == null || manifest.effects.Length == 0 ||
+                manifest.publicationBlocked || manifest.effects.Any(effect =>
+                    effect == null || effect.publicationBlocked ||
+                    (effect.status != "ready" && effect.status != "partial") ||
+                    string.IsNullOrWhiteSpace(effect.effectJson)))
+            {
+                return null;
+            }
+
+            return new UnityParticleQuarksRuntimeManifest
+            {
+                schemaVersion = RuntimeManifestSchema,
+                effects = manifest.effects.Select(effect => new UnityParticleQuarksRuntimeEffectManifest
+                {
+                    id = effect.id,
+                    url = effect.effectJson,
+                    status = effect.status,
+                    runtimeProfile = effect.runtimeProfile,
+                    runtimeTier = effect.runtimeTier,
+                    extensionsUsed = effect.extensionsUsed ?? Array.Empty<UnityParticleQuarksExtensionDescriptor>(),
+                    extensionsRequired = effect.extensionsRequired ?? Array.Empty<UnityParticleQuarksExtensionDescriptor>(),
+                    conversionReport = effect.conversionReport
+                }).ToArray()
+            };
+        }
+
+        private static void ValidateStaging(
+            string stagingRoot,
+            UnityParticleQuarksPipelineManifest manifest,
+            UnityParticleQuarksRuntimeManifest runtimeManifest)
         {
             var manifestPath = Path.Combine(stagingRoot, "manifest.json");
             if (!File.Exists(manifestPath)) throw new InvalidOperationException("Staged manifest is missing.");
             foreach (var effect in manifest.effects)
             {
-                var reportPath = Path.Combine(stagingRoot, effect.conversionReport.Replace('/', Path.DirectorySeparatorChar));
+                var reportPath = ResolveStagedFile(stagingRoot, effect.conversionReport, effect.id + ".conversionReport");
                 if (!File.Exists(reportPath)) throw new InvalidOperationException("Staged conversion report is missing for " + effect.id);
                 if (effect.status == "ready" || effect.status == "partial" || effect.status == "profile_required" || effect.status == "review_only")
                 {
-                    var jsonPath = Path.Combine(stagingRoot, effect.effectJson.Replace('/', Path.DirectorySeparatorChar));
+                    var jsonPath = ResolveStagedFile(stagingRoot, effect.effectJson, effect.id + ".effectJson");
                     if (!File.Exists(jsonPath) || !File.ReadAllText(jsonPath).Contains("\"ParticleEmitter\""))
                         throw new InvalidOperationException("Staged Quarks JSON is invalid for " + effect.id);
                 }
@@ -407,6 +442,67 @@ namespace UnityParticleQuarksExporter.Editor
                     throw new InvalidOperationException("Failed effect published effectJson: " + effect.id);
                 }
             }
+
+            var runtimeManifestPath = Path.Combine(stagingRoot, "runtime-manifest.json");
+            if (runtimeManifest == null)
+            {
+                if (File.Exists(runtimeManifestPath))
+                    throw new InvalidOperationException("Blocked export published a runtime manifest.");
+                return;
+            }
+
+            if (!File.Exists(runtimeManifestPath)) throw new InvalidOperationException("Staged runtime manifest is missing.");
+            if (runtimeManifest.schemaVersion != RuntimeManifestSchema)
+                throw new InvalidOperationException("Staged runtime manifest has an invalid schemaVersion.");
+            if (runtimeManifest.effects == null || runtimeManifest.effects.Length != manifest.effects.Length)
+                throw new InvalidOperationException("Staged runtime manifest effect count does not match the pipeline manifest.");
+
+            var pipelineEffects = manifest.effects.ToDictionary(effect => effect.id, StringComparer.Ordinal);
+            var runtimeIds = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var effect in runtimeManifest.effects)
+            {
+                if (effect == null || string.IsNullOrWhiteSpace(effect.id) || !runtimeIds.Add(effect.id))
+                    throw new InvalidOperationException("Staged runtime manifest contains an invalid or duplicate effect id.");
+                if (!pipelineEffects.TryGetValue(effect.id, out var pipelineEffect))
+                    throw new InvalidOperationException("Staged runtime manifest contains an unknown effect: " + effect.id);
+                if (effect.url != pipelineEffect.effectJson || effect.status != pipelineEffect.status ||
+                    effect.runtimeProfile != pipelineEffect.runtimeProfile || effect.runtimeTier != pipelineEffect.runtimeTier ||
+                    effect.conversionReport != pipelineEffect.conversionReport ||
+                    !ExtensionsMatch(effect.extensionsUsed, pipelineEffect.extensionsUsed) ||
+                    !ExtensionsMatch(effect.extensionsRequired, pipelineEffect.extensionsRequired))
+                {
+                    throw new InvalidOperationException("Staged runtime manifest does not match the pipeline manifest for " + effect.id);
+                }
+
+                var jsonPath = ResolveStagedFile(stagingRoot, effect.url, effect.id + ".url");
+                if (!File.Exists(jsonPath)) throw new InvalidOperationException("Staged runtime asset is missing for " + effect.id);
+            }
+        }
+
+        private static bool ExtensionsMatch(
+            UnityParticleQuarksExtensionDescriptor[] first,
+            UnityParticleQuarksExtensionDescriptor[] second)
+        {
+            first = first ?? Array.Empty<UnityParticleQuarksExtensionDescriptor>();
+            second = second ?? Array.Empty<UnityParticleQuarksExtensionDescriptor>();
+            return first.Length == second.Length && first.Zip(second, (left, right) =>
+                left != null && right != null && left.id == right.id && left.version == right.version).All(matches => matches);
+        }
+
+        private static string ResolveStagedFile(string stagingRoot, string relativePath, string field)
+        {
+            if (string.IsNullOrWhiteSpace(relativePath) || Path.IsPathRooted(relativePath) ||
+                Regex.IsMatch(relativePath, "^[a-z][a-z0-9+.-]*:", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+            {
+                throw new InvalidOperationException("Staged manifest " + field + " must be a safe relative path.");
+            }
+
+            var normalized = relativePath.Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar);
+            var resolved = Path.GetFullPath(Path.Combine(stagingRoot, normalized));
+            var root = Path.GetFullPath(stagingRoot);
+            if (!IsWithin(root, resolved) || string.Equals(root, resolved, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Staged manifest " + field + " must stay within the export root.");
+            return resolved;
         }
 
         private static void Publish(string stagingRoot, string outputRoot, string backupRoot)

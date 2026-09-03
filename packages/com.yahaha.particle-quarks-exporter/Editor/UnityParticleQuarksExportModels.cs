@@ -36,7 +36,7 @@ namespace UnityParticleQuarksExporter.Editor
     public sealed class UnityParticleQuarksPipelineManifest
     {
         public string schemaVersion = "unity_particle_quarks_pipeline.manifest.v1";
-        public string exporterVersion = "0.3.2";
+        public string exporterVersion = "0.3.3";
         public string unityVersion;
         public string target;
         public string sourceRenderPipeline;
@@ -71,10 +71,30 @@ namespace UnityParticleQuarksExporter.Editor
     }
 
     [Serializable]
+    public sealed class UnityParticleQuarksRuntimeManifest
+    {
+        public string schemaVersion = "unity_particle_quarks_runtime.manifest.v1";
+        public UnityParticleQuarksRuntimeEffectManifest[] effects;
+    }
+
+    [Serializable]
+    public sealed class UnityParticleQuarksRuntimeEffectManifest
+    {
+        public string id;
+        public string url;
+        public string status;
+        public string runtimeProfile;
+        public string runtimeTier;
+        public UnityParticleQuarksExtensionDescriptor[] extensionsUsed;
+        public UnityParticleQuarksExtensionDescriptor[] extensionsRequired;
+        public string conversionReport;
+    }
+
+    [Serializable]
     public sealed class UnityParticleQuarksConversionReport
     {
         public string schemaVersion = "unity_particle_quarks_conversion.report.v1";
-        public string exporterVersion = "0.3.2";
+        public string exporterVersion = "0.3.3";
         public string unityVersion;
         public string effectId;
         public string sourcePrefabPath;

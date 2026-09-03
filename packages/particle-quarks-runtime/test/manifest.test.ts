@@ -1,7 +1,28 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { resolveManifestAsset, validateVfxManifest } from '../src/manifest.js';
 
+const sharedRuntimeManifest = JSON.parse(readFileSync(new URL(
+  '../../com.yahaha.particle-quarks-exporter/Tests/Fixtures/runtime-manifest.json',
+  import.meta.url
+), 'utf8')) as unknown;
+
 describe('VFX manifest', () => {
+  it('accepts the runtime manifest shared with the Unity exporter tests', () => {
+    const manifest = validateVfxManifest(sharedRuntimeManifest);
+    expect(manifest.effects.map((effect) => [effect.id, effect.status, effect.url])).toEqual([
+      ['stock-ready', 'ready', 'stock-ready/effect.quarks.json'],
+      ['paired-partial', 'partial', 'paired-partial/effect.quarks.json']
+    ]);
+  });
+
+  it('directs pipeline manifests to the generated runtime manifest', () => {
+    expect(() => validateVfxManifest({
+      schemaVersion: 'unity_particle_quarks_pipeline.manifest.v1',
+      effects: [{ id: 'water-impact', status: 'ready', effectJson: './water-impact/effect.quarks.json' }]
+    })).toThrow(/Load the generated runtime-manifest\.json instead/);
+  });
+
   it('accepts a ready effect with an explicit fallback', () => {
     const manifest = validateVfxManifest({
       schemaVersion: 'unity_particle_quarks_runtime.manifest.v1',

@@ -15,7 +15,7 @@ its referenced materials, textures and meshes. HDRP is `source-only`.
 The `stock` profile writes JSON for `three.quarks@0.17.1` and
 `quarks.core@0.17.1`; no companion package is needed in the browser. The
 `extended` profile writes paired metadata and requires
-`unity-particle-quarks-runtime@0.3.2` in the browser when the manifest
+`unity-particle-quarks-runtime@0.3.3` in the browser when the manifest
 requires `unity_particle_paired_semantics@1`. Both profiles use Three.js
 `0.185.0`.
 
@@ -60,11 +60,18 @@ New integrations use:
 }
 ```
 
-The neutral output schemas are
-`unity_particle_quarks_pipeline.manifest.v1` and
-`unity_particle_quarks_conversion.report.v1`. Each effect records
+The diagnostic output schemas are `unity_particle_quarks_pipeline.manifest.v1`
+and `unity_particle_quarks_conversion.report.v1`. A fully publishable batch
+also writes `runtime-manifest.json` with schema
+`unity_particle_quarks_runtime.manifest.v1`; pass that file directly to
+`runtime.loadManifest()`. Each effect records
 `runtimeProfile`, the v1 `runtimeTier` compatibility summary,
 `extensionsUsed`, and `extensionsRequired`.
+
+The pipeline manifest can retain `failed`, `profile_required`, and
+`review_only` diagnostics. If any such entry exists, no runtime manifest is
+published. A `partial` entry is runtime-loadable only when the browser runtime
+is created with `allowPartial: true`.
 
 ## Conversion policy
 

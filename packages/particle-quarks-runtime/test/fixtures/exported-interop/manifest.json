@@ -1,0 +1,55 @@
+{
+    "schemaVersion": "unity_particle_quarks_pipeline.manifest.v1",
+    "exporterVersion": "0.3.3",
+    "unityVersion": "2022.3.52f1",
+    "target": "default",
+    "sourceRenderPipeline": "default",
+    "runtimeProfile": "extended",
+    "unknownCustomShaderPolicy": "require-profile",
+    "publicationBlocked": false,
+    "extensionsUsed": [
+        {
+            "id": "unity_particle_paired_semantics",
+            "version": "1"
+        }
+    ],
+    "extensionsRequired": [
+        {
+            "id": "unity_particle_paired_semantics",
+            "version": "1"
+        }
+    ],
+    "effects": [
+        {
+            "id": "interop-effect",
+            "sourcePrefabPath": "Assets/__UnityParticleQuarksInterop/InteropEffect.prefab",
+            "status": "ready",
+            "effectJson": "interop-effect/effect.quarks.json",
+            "conversionReport": "interop-effect/conversion-report.json",
+            "textures": [
+                "interop-effect/textures/interoptexture-87dbf26c84e3.png"
+            ],
+            "particleSystemCount": 1,
+            "sourceFingerprint": "40c66eb77b5ea047e5d4fbbcbfb781eaf2788369c53d087400b85f6e3693410e",
+            "target": "default",
+            "runtimeProfile": "extended",
+            "unknownCustomShaderPolicy": "require-profile",
+            "publicationBlocked": false,
+            "shaderProfileGaps": [],
+            "runtimeTier": "paired",
+            "extensionsUsed": [
+                {
+                    "id": "unity_particle_paired_semantics",
+                    "version": "1"
+                }
+            ],
+            "extensionsRequired": [
+                {
+                    "id": "unity_particle_paired_semantics",
+                    "version": "1"
+                }
+            ],
+            "errors": []
+        }
+    ]
+}

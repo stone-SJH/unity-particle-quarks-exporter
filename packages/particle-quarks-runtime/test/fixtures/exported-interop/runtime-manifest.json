@@ -1,0 +1,25 @@
+{
+    "schemaVersion": "unity_particle_quarks_runtime.manifest.v1",
+    "effects": [
+        {
+            "id": "interop-effect",
+            "url": "interop-effect/effect.quarks.json",
+            "status": "ready",
+            "runtimeProfile": "extended",
+            "runtimeTier": "paired",
+            "extensionsUsed": [
+                {
+                    "id": "unity_particle_paired_semantics",
+                    "version": "1"
+                }
+            ],
+            "extensionsRequired": [
+                {
+                    "id": "unity_particle_paired_semantics",
+                    "version": "1"
+                }
+            ],
+            "conversionReport": "interop-effect/conversion-report.json"
+        }
+    ]
+}

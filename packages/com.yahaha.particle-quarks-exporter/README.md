@@ -13,7 +13,7 @@ stock-loadable Three Object3D JSON, a manifest and a conversion report.
 The exporter package itself has no browser runtime dependency. Select
 `runtimeProfile: "stock"` for manifests consumed by stock Quarks. Select
 `runtimeProfile: "extended"` for paired manifests; the browser application
-must additionally install `unity-particle-quarks-runtime@0.3.2` and load
+must additionally install `unity-particle-quarks-runtime@0.3.3` and load
 the `unity_particle_paired_semantics@1` extension.
 
 The browser contract is Three.js `0.185.0`, `three.quarks`/`quarks.core`
@@ -23,3 +23,7 @@ See [`Documentation~/index.md`](Documentation~/index.md) for batch export and
 conversion-report usage. See the
 [`compatibility matrix`](../../docs/compatibility-matrix.md) for module-level
 support and fallback behavior.
+
+A publishable batch writes `manifest.json` for pipeline diagnostics and
+`runtime-manifest.json` for direct use with the browser runtime. The latter is
+not written when any effect is failed, profile-required, or review-only.

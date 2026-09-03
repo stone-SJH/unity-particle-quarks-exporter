@@ -19,7 +19,7 @@ stock Quarks 无法表示的行为。
 | 导出 profile | Unity 侧要求 | 浏览器侧要求 |
 | --- | --- | --- |
 | `stock` | 本 UPM package | `three@0.185.0`、`three.quarks@0.17.1`、`quarks.core@0.17.1` |
-| `extended`（paired） | 本 UPM package | 上述 stock packages，加上 `unity-particle-quarks-runtime@0.3.2` |
+| `extended`（paired） | 本 UPM package | 上述 stock packages，加上 `unity-particle-quarks-runtime@0.3.3` |
 
 当 manifest 没有 required companion extension 时选择 `stock`。当 manifest
 要求 `unity_particle_paired_semantics@1` 时选择 `extended`；此时浏览器应用
@@ -39,7 +39,7 @@ JSON，但会拒绝声明此扩展为 required 的效果，而不会静默声称
 - Three.js `0.185.0`，作为应用的 peer dependency。
 - 两种 profile 都需要 `three.quarks@0.17.1` 和 `quarks.core@0.17.1`。
 - 只有 paired/extended manifest 需要
-  `unity-particle-quarks-runtime@0.3.2`。
+  `unity-particle-quarks-runtime@0.3.3`。
 - 只有使用 package build/test 工具时才需要 Node.js `>=18.18.0`。
 
 ## 组件
@@ -83,10 +83,33 @@ JSON，但会拒绝声明此扩展为 required 的效果，而不会静默声称
 输出供普通 Three.Quarks 播放的 JSON；当 manifest 需要时，
 `runtimeProfile: "extended"` 启用 companion adapter。
 
+每次可发布的导出都会在 `outputRoot` 下写出两个用途不同的 manifest：
+
+- `manifest.json` 是 pipeline 和诊断记录，可以包含不可播放的 `failed`、
+  `profile_required` 或 `review_only` 条目。
+- `runtime-manifest.json` 是 runtime 可加载目录。只有全部 effect 都可发布
+  （`ready` 或 `partial`）时才会生成，并把导出的 `effectJson` 映射到 runtime
+  所需的 `url` 字段。
+
+任一 effect 阻断发布时都不会生成 `runtime-manifest.json`；原子目录替换也会
+移除旧文件，避免误加载过期 effect。
+
 ## 浏览器 runtime
 
 runtime package 是 `unity-particle-quarks-runtime`，需要 Three.js
 `0.185.0`。它支持 stock 和 extended profile：
+
+```sh
+npm install unity-particle-quarks-runtime@0.3.3 three@0.185.0
+```
+
+如果配置的 registry 尚未提供 `0.3.3`，可从本源码 checkout 构建并安装：
+
+```sh
+npm ci
+npm pack -w unity-particle-quarks-runtime
+npm install ./unity-particle-quarks-runtime-0.3.3.tgz three@0.185.0
+```
 
 ```ts
 import { createVfxRuntime } from 'unity-particle-quarks-runtime';
@@ -98,7 +121,7 @@ const runtime = createVfxRuntime({
   runtimeProfile: 'extended'
 });
 
-await runtime.loadManifest('./effects/manifest.json');
+await runtime.loadManifest('./effects/runtime-manifest.json');
 await runtime.preload('water-impact');
 const handle = runtime.spawn('water-impact');
 runtime.update(deltaSeconds);
@@ -117,7 +140,8 @@ runtime.release(handle);
 `three.quarks`/`quarks.core` `0.17.1`。模块级行为和 fallback 详见
 [`兼容性矩阵`](docs/compatibility-matrix.md)。
 
-每次 batch 运行都会在 `outputRoot` 下写出 manifest 和 conversion report。
+每次 batch 运行都会在 `outputRoot` 下写出 pipeline manifest 和 conversion
+report；全部内容可发布时还会写出 `runtime-manifest.json`。
 报告会标识输入效果、转换阶段、预期契约、观测值和下一步动作。
 `unknown`、`partial`、`unsupported` 和 `rejected` 始终保持为明确状态。
 

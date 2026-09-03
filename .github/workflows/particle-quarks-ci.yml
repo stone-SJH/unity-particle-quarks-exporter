@@ -28,3 +28,20 @@ jobs:
         run: npm test
       - name: Build runtime
         run: npm run build
+      - name: Load the Unity-exported runtime manifest
+        run: >-
+          npm run verify:runtime-load --
+          packages/particle-quarks-runtime/test/fixtures/exported-interop/runtime-manifest.json
+          --profile extended
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run browser HTTP smoke
+        run: npm run verify:browser
+      - name: Pack runtime
+        run: |
+          mkdir -p "$RUNNER_TEMP/npm-pack"
+          npm pack -w unity-particle-quarks-runtime --pack-destination "$RUNNER_TEMP/npm-pack"
+      - name: Install tarball in a clean project
+        run: >-
+          npm run verify:package-install --
+          "$RUNNER_TEMP/npm-pack/unity-particle-quarks-runtime-0.3.3.tgz"

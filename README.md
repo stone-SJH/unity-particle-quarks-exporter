@@ -20,7 +20,7 @@ The exporter can write either profile without a browser dependency:
 | Export profile | Unity-side requirement | Browser-side requirement |
 | --- | --- | --- |
 | `stock` | This UPM package | `three@0.185.0`, `three.quarks@0.17.1`, `quarks.core@0.17.1` |
-| `extended` (paired) | This UPM package | The same stock packages plus `unity-particle-quarks-runtime@0.3.2` |
+| `extended` (paired) | This UPM package | The same stock packages plus `unity-particle-quarks-runtime@0.3.3` |
 
 Choose `stock` when the manifest has no required companion extension. Choose
 `extended` when the manifest requires `unity_particle_paired_semantics@1`; the
@@ -40,7 +40,7 @@ the Unity semantics were preserved.
 
 - Three.js `0.185.0` as the application peer dependency.
 - `three.quarks@0.17.1` and `quarks.core@0.17.1` for both profiles.
-- `unity-particle-quarks-runtime@0.3.2` only for paired/extended
+- `unity-particle-quarks-runtime@0.3.3` only for paired/extended
   manifests.
 - Node.js `>=18.18.0` only when using the package build/test tooling.
 
@@ -87,10 +87,35 @@ Use `mode: "strict"` to reject blocking unsupported input. Use
 `runtimeProfile: "extended"` enables the companion adapter when required by
 the manifest.
 
+Every successful publish writes two different manifests below `outputRoot`:
+
+- `manifest.json` is the pipeline and diagnostics record. It can contain
+  non-playable `failed`, `profile_required`, or `review_only` entries.
+- `runtime-manifest.json` is the runtime-loadable catalog. It is emitted only
+  when every effect is publishable (`ready` or `partial`) and maps each
+  exported `effectJson` to the runtime `url` field.
+
+If any effect blocks publication, the exporter does not write
+`runtime-manifest.json`; atomic directory replacement also removes an older
+runtime manifest so stale effects cannot be loaded accidentally.
+
 ## Browser runtime
 
 The runtime package is `unity-particle-quarks-runtime` and requires
 Three.js `0.185.0`. It supports stock and extended profiles:
+
+```sh
+npm install unity-particle-quarks-runtime@0.3.3 three@0.185.0
+```
+
+If `0.3.3` has not yet reached the configured registry, build and install the
+package from this source checkout:
+
+```sh
+npm ci
+npm pack -w unity-particle-quarks-runtime
+npm install ./unity-particle-quarks-runtime-0.3.3.tgz three@0.185.0
+```
 
 ```ts
 import { createVfxRuntime } from 'unity-particle-quarks-runtime';
@@ -102,7 +127,7 @@ const runtime = createVfxRuntime({
   runtimeProfile: 'extended'
 });
 
-await runtime.loadManifest('./effects/manifest.json');
+await runtime.loadManifest('./effects/runtime-manifest.json');
 await runtime.preload('water-impact');
 const handle = runtime.spawn('water-impact');
 runtime.update(deltaSeconds);
@@ -122,7 +147,8 @@ runtime requirements are Node.js `>=18.18.0`, Three.js `0.185.0`, and
 [`compatibility matrix`](docs/compatibility-matrix.md) for module-level
 behavior and fallback details.
 
-Every batch run writes a manifest and conversion report below `outputRoot`.
+Every batch run writes the pipeline manifest and conversion reports below
+`outputRoot`; fully publishable runs also write `runtime-manifest.json`.
 Reports identify the input effect, conversion stage, expected contract,
 observed value and next action. `unknown`, `partial`, `unsupported` and
 `rejected` remain explicit statuses.

@@ -4,12 +4,61 @@ using System.Linq;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace UnityParticleQuarksExporter.Editor.Tests
 {
     public static class UnityParticleQuarksInteropBatchmode
     {
         private const string FixtureRoot = "Assets/__UnityParticleQuarksInterop";
+
+        public static void ConfigureProjectForTests()
+        {
+            try
+            {
+                var pipeline = (GetArgument("-unityParticleQuarksTestPipeline") ?? "built-in").ToLowerInvariant();
+                if (pipeline == "built-in")
+                {
+                    GraphicsSettings.defaultRenderPipeline = null;
+                    QualitySettings.renderPipeline = null;
+                }
+                else if (pipeline == "urp")
+                {
+                    var assetType = Type.GetType(
+                        "UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset, Unity.RenderPipelines.Universal.Runtime");
+                    if (assetType == null)
+                        throw new InvalidOperationException("The URP package is required for the URP contract tuple.");
+                    var assetPath = "Assets/__UnityParticleQuarksTestPipeline.asset";
+                    AssetDatabase.DeleteAsset(assetPath);
+                    AssetDatabase.DeleteAsset("Assets/UniversalRenderer.asset");
+                    var create = assetType.GetMethods().Single(method =>
+                        method.Name == "Create" && method.IsStatic && method.GetParameters().Length == 1);
+                    var asset = create.Invoke(null, new object[] { null }) as RenderPipelineAsset;
+                    if (asset == null) throw new InvalidOperationException("Could not create the URP pipeline asset.");
+                    AssetDatabase.CreateAsset(asset, assetPath);
+                    var loadRenderer = assetType.GetMethods().Single(method =>
+                        method.Name == "LoadBuiltinRendererData" && method.GetParameters().Length == 1);
+                    var rendererType = loadRenderer.GetParameters()[0].ParameterType;
+                    loadRenderer.Invoke(asset, new[] { Enum.ToObject(rendererType, 0) });
+                    GraphicsSettings.defaultRenderPipeline = asset;
+                    QualitySettings.renderPipeline = asset;
+                }
+                else
+                {
+                    throw new InvalidOperationException("Test pipeline must be built-in or urp.");
+                }
+
+                AssetDatabase.SaveAssets();
+                Debug.Log("Configured Unity particle contract tests for " + pipeline + ".");
+                if (Application.isBatchMode) EditorApplication.Exit(0);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                if (Application.isBatchMode) EditorApplication.Exit(1);
+                else throw;
+            }
+        }
 
         public static void Run()
         {
@@ -25,11 +74,23 @@ namespace UnityParticleQuarksExporter.Editor.Tests
                     AssetDatabase.CreateFolder("Assets", "__UnityParticleQuarksInterop");
                     var gameObject = new GameObject("InteropEffect");
                     var system = gameObject.AddComponent<ParticleSystem>();
-                    var shader = Shader.Find("Unlit/Color") ?? Shader.Find("Particles/Standard Unlit");
+                    var shader = Shader.Find("Legacy Shaders/Particles/Alpha Blended") ??
+                                 Shader.Find("Particles/Standard Unlit");
                     if (shader == null) throw new InvalidOperationException("Interop fixture could not resolve a built-in unlit shader.");
                     var material = new Material(shader) { name = "InteropMaterial" };
                     var materialPath = FixtureRoot + "/InteropMaterial.mat";
                     AssetDatabase.CreateAsset(material, materialPath);
+                    var sourceTexture = new Texture2D(2, 2, TextureFormat.RGBA32, false, false);
+                    sourceTexture.SetPixels(new[] { Color.cyan, Color.white, Color.blue, Color.clear });
+                    sourceTexture.Apply();
+                    var texturePath = FixtureRoot + "/InteropTexture.png";
+                    File.WriteAllBytes(texturePath, sourceTexture.EncodeToPNG());
+                    UnityEngine.Object.DestroyImmediate(sourceTexture);
+                    AssetDatabase.ImportAsset(texturePath, ImportAssetOptions.ForceSynchronousImport);
+                    var importedTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
+                    if (material.HasProperty("_MainTex")) material.SetTexture("_MainTex", importedTexture);
+                    else if (material.HasProperty("_BaseMap")) material.SetTexture("_BaseMap", importedTexture);
+                    else throw new InvalidOperationException("Interop fixture shader has no supported base texture property.");
                     gameObject.GetComponent<ParticleSystemRenderer>().sharedMaterial = material;
                     var main = system.main;
                     main.loop = false;

@@ -11,10 +11,10 @@ silently.
 
 | Unity editor | Pipeline | Pipeline package lock | Export/runtime | Browser |
 | --- | --- | --- | --- | --- |
-| 2022.3.52f1 | Built-in | SRP none | exporter/runtime 0.3.2 | Three 0.185.0, Quarks 0.17.1 |
-| 2022.3.52f1 | URP | shadergraph 14.0.11, urp-config 14.0.10 | exporter/runtime 0.3.2 | Three 0.185.0, Quarks 0.17.1 |
-| 6000.3.22f1 | Built-in | SRP none | exporter/runtime 0.3.2 | Three 0.185.0, Quarks 0.17.1 |
-| 6000.3.22f1 | URP | shadergraph 17.3.0, urp-config 17.0.3 | exporter/runtime 0.3.2 | Three 0.185.0, Quarks 0.17.1 |
+| 2022.3.52f1 | Built-in | SRP none | exporter/runtime 0.3.3 | Three 0.185.0, Quarks 0.17.1 |
+| 2022.3.52f1 | URP | shadergraph 14.0.11, urp-config 14.0.10 | exporter/runtime 0.3.3 | Three 0.185.0, Quarks 0.17.1 |
+| 6000.3.22f1 | Built-in | SRP none | exporter/runtime 0.3.3 | Three 0.185.0, Quarks 0.17.1 |
+| 6000.3.22f1 | URP | shadergraph 17.3.0, urp-config 17.0.3 | exporter/runtime 0.3.3 | Three 0.185.0, Quarks 0.17.1 |
 
 HDRP is `source-only` and is not a declared conversion tuple. Node.js
 `>=18.18.0` is required for the browser runtime tooling. Unity conversion and
@@ -53,7 +53,7 @@ EditMode checks use the declared editor and render-pipeline tuples.
 - `stock` requires `three@0.185.0`, `three.quarks@0.17.1`, and
   `quarks.core@0.17.1`; companion metadata is inert or uses the row's named
   fallback.
-- `extended` adds `unity-particle-quarks-runtime@0.3.2` and negotiates
+- `extended` adds `unity-particle-quarks-runtime@0.3.3` and negotiates
   `unity_particle_paired_semantics@1` for rows marked `exact_companion_runtime` or
   `approx_companion_runtime`.
 - `fatal_fail` rows such as Collision/Trigger are outside the canonical positive

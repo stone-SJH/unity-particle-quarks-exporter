@@ -84,7 +84,7 @@ namespace UnityParticleQuarksExporter.Editor.Tests
             var report = File.ReadAllText(Path.Combine(outputRoot, "fixture", "conversion-report.json"));
 
             Assert.That(manifest.effects.Single().status, Is.EqualTo("ready"));
-            Assert.That(manifest.exporterVersion, Is.EqualTo("0.3.2"));
+            Assert.That(manifest.exporterVersion, Is.EqualTo("0.3.3"));
             Assert.That(manifest.runtimeProfile, Is.EqualTo("extended"));
             Assert.That(manifest.effects.Single().runtimeTier, Is.EqualTo("paired"));
             Assert.That(manifest.effects.Single().extensionsRequired.Single().id,
@@ -98,6 +98,89 @@ namespace UnityParticleQuarksExporter.Editor.Tests
             StringAssert.Contains("main.maxParticles.runtimeCapacity", report);
             StringAssert.Contains("main.maxParticles.stockUnboundedFallback", report);
             StringAssert.Contains("no colorspace_fragment", report);
+        }
+
+        [Test]
+        public void ReadyExport_WritesRuntimeManifestThatMatchesThePipelineManifest()
+        {
+            var prefabPath = CreatePrefab("RuntimeManifestReady", _ => { });
+            WriteConfig(prefabPath, "strict", runtimeProfile: "stock");
+
+            var pipelineManifest = UnityParticleQuarksExportBatchmode.ExportConfig(configPath, true);
+            var runtimeManifestPath = Path.Combine(outputRoot, "runtime-manifest.json");
+            Assert.That(File.Exists(runtimeManifestPath), Is.True);
+
+            var runtimeJson = File.ReadAllText(runtimeManifestPath);
+            var runtimeManifest = JsonUtility.FromJson<UnityParticleQuarksRuntimeManifest>(runtimeJson);
+            var pipelineEffect = pipelineManifest.effects.Single();
+            var runtimeEffect = runtimeManifest.effects.Single();
+
+            Assert.That(runtimeManifest.schemaVersion, Is.EqualTo("unity_particle_quarks_runtime.manifest.v1"));
+            Assert.That(runtimeEffect.id, Is.EqualTo(pipelineEffect.id));
+            Assert.That(runtimeEffect.url, Is.EqualTo(pipelineEffect.effectJson));
+            Assert.That(runtimeEffect.status, Is.EqualTo("ready"));
+            Assert.That(runtimeEffect.runtimeProfile, Is.EqualTo("stock"));
+            Assert.That(runtimeEffect.runtimeTier, Is.EqualTo("stock"));
+            Assert.That(runtimeEffect.extensionsUsed.Single().id, Is.EqualTo("unity_particle_paired_semantics"));
+            Assert.That(runtimeEffect.extensionsRequired, Is.Empty);
+            Assert.That(runtimeEffect.conversionReport, Is.EqualTo(pipelineEffect.conversionReport));
+            StringAssert.DoesNotContain("\"effectJson\"", runtimeJson);
+        }
+
+        [Test]
+        public void RuntimeManifestProjection_MatchesTheSharedContractFixture()
+        {
+            var pipelineFixture = AssetDatabase.LoadAssetAtPath<TextAsset>(
+                "Packages/com.yahaha.particle-quarks-exporter/Tests/Fixtures/pipeline-manifest.json");
+            var runtimeFixture = AssetDatabase.LoadAssetAtPath<TextAsset>(
+                "Packages/com.yahaha.particle-quarks-exporter/Tests/Fixtures/runtime-manifest.json");
+            Assert.That(pipelineFixture, Is.Not.Null);
+            Assert.That(runtimeFixture, Is.Not.Null);
+
+            var pipelineManifest = JsonUtility.FromJson<UnityParticleQuarksPipelineManifest>(pipelineFixture.text);
+            var runtimeManifest = UnityParticleQuarksExportBatchmode.CreateRuntimeManifest(pipelineManifest);
+
+            Assert.That(runtimeManifest, Is.Not.Null);
+            Assert.That(
+                JsonUtility.ToJson(runtimeManifest, true).Replace("\r\n", "\n").TrimEnd(),
+                Is.EqualTo(runtimeFixture.text.Replace("\r\n", "\n").TrimEnd()));
+        }
+
+        [Test]
+        public void BlockedMixedExport_RemovesPreviouslyPublishedRuntimeManifest()
+        {
+            var readyPrefab = CreatePrefab("RuntimeManifestReadyFirst", _ => { });
+            WriteConfig(readyPrefab, "strict", runtimeProfile: "stock");
+            UnityParticleQuarksExportBatchmode.ExportConfig(configPath, true);
+            Assert.That(File.Exists(Path.Combine(outputRoot, "runtime-manifest.json")), Is.True);
+
+            var blockedPrefab = CreatePrefab("RuntimeManifestBlocked", system =>
+            {
+                var collision = system.collision;
+                collision.enabled = true;
+            });
+            var config = new UnityParticleQuarksPipelineConfig
+            {
+                schemaVersion = UnityParticleQuarksExportBatchmode.ConfigSchema,
+                outputRoot = outputRoot,
+                mode = "strict",
+                runtimeProfile = "stock",
+                target = "default",
+                maxTextureSize = 256,
+                effects = new[]
+                {
+                    EffectRequest("ready-effect", readyPrefab),
+                    EffectRequest("blocked-effect", blockedPrefab)
+                }
+            };
+            File.WriteAllText(configPath, JsonUtility.ToJson(config, true));
+
+            var manifest = UnityParticleQuarksExportBatchmode.ExportConfig(configPath, false);
+
+            Assert.That(manifest.effects.Single(effect => effect.id == "ready-effect").status, Is.EqualTo("ready"));
+            Assert.That(manifest.effects.Single(effect => effect.id == "blocked-effect").status, Is.EqualTo("failed"));
+            Assert.That(File.Exists(Path.Combine(outputRoot, "manifest.json")), Is.True);
+            Assert.That(File.Exists(Path.Combine(outputRoot, "runtime-manifest.json")), Is.False);
         }
 
         [Test]
@@ -2346,12 +2429,14 @@ namespace UnityParticleQuarksExporter.Editor.Tests
             Assert.That(manifest.effects.Single().status, Is.EqualTo("profile_required"));
             Assert.That(manifest.effects.Single().publicationBlocked, Is.True);
             Assert.That(File.Exists(Path.Combine(outputRoot, "fixture", "effect.quarks.json")), Is.True);
+            Assert.That(File.Exists(Path.Combine(outputRoot, "runtime-manifest.json")), Is.False);
 
             WriteConfig(prefabPath, "best-effort", unknownCustomShaderPolicy: "review-fallback");
             manifest = UnityParticleQuarksExportBatchmode.ExportConfig(configPath, false);
             var report = File.ReadAllText(Path.Combine(outputRoot, "fixture", "conversion-report.json"));
             Assert.That(manifest.effects.Single().status, Is.EqualTo("review_only"));
             Assert.That(manifest.effects.Single().publicationBlocked, Is.True);
+            Assert.That(File.Exists(Path.Combine(outputRoot, "runtime-manifest.json")), Is.False);
             StringAssert.Contains("material.shaderBehavior.meshBasicFallback", report);
             StringAssert.Contains("outside the validated basic particle-shader set", report);
             StringAssert.Contains("shaderProfileGaps", report);
@@ -3654,12 +3739,14 @@ namespace UnityParticleQuarksExporter.Editor.Tests
             var manifest = UnityParticleQuarksExportBatchmode.ExportConfig(configPath, true);
             var report = File.ReadAllText(Path.Combine(outputRoot, "fixture", "conversion-report.json"));
             Assert.That(manifest.effects.Single().status, Is.EqualTo("partial"));
+            Assert.That(File.Exists(Path.Combine(outputRoot, "runtime-manifest.json")), Is.True);
             StringAssert.Contains("lights.lightType.Spot", report);
             StringAssert.Contains("lights.lightType.Spot.omittedFallback", report);
 
             WriteConfig(prefabPath, "strict");
             manifest = UnityParticleQuarksExportBatchmode.ExportConfig(configPath, false);
             Assert.That(manifest.effects.Single().status, Is.EqualTo("failed"));
+            Assert.That(File.Exists(Path.Combine(outputRoot, "runtime-manifest.json")), Is.False);
         }
 
         private string CreatePrefab(string name, Action<ParticleSystem> configure)
@@ -3696,6 +3783,17 @@ namespace UnityParticleQuarksExporter.Editor.Tests
             renderer.sharedMaterial = fixtureMaterial;
             renderer.mesh = fixtureRendererMesh;
             return system;
+        }
+
+        private static UnityParticleQuarksEffectRequest EffectRequest(string id, string prefabPath)
+        {
+            return new UnityParticleQuarksEffectRequest
+            {
+                id = id,
+                prefabPath = prefabPath,
+                includeParticleSystemPaths = Array.Empty<string>(),
+                excludeParticleSystemPaths = Array.Empty<string>()
+            };
         }
 
         private void WriteConfig(

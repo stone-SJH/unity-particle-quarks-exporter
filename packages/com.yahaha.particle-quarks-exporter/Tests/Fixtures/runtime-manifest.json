@@ -1,0 +1,40 @@
+{
+    "schemaVersion": "unity_particle_quarks_runtime.manifest.v1",
+    "effects": [
+        {
+            "id": "stock-ready",
+            "url": "stock-ready/effect.quarks.json",
+            "status": "ready",
+            "runtimeProfile": "stock",
+            "runtimeTier": "stock",
+            "extensionsUsed": [
+                {
+                    "id": "unity_particle_paired_semantics",
+                    "version": "1"
+                }
+            ],
+            "extensionsRequired": [],
+            "conversionReport": "stock-ready/conversion-report.json"
+        },
+        {
+            "id": "paired-partial",
+            "url": "paired-partial/effect.quarks.json",
+            "status": "partial",
+            "runtimeProfile": "extended",
+            "runtimeTier": "paired",
+            "extensionsUsed": [
+                {
+                    "id": "unity_particle_paired_semantics",
+                    "version": "1"
+                }
+            ],
+            "extensionsRequired": [
+                {
+                    "id": "unity_particle_paired_semantics",
+                    "version": "1"
+                }
+            ],
+            "conversionReport": "paired-partial/conversion-report.json"
+        }
+    ]
+}

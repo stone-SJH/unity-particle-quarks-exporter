@@ -1,0 +1,43 @@
+name: unity-contract
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unity-contract:
+    strategy:
+      fail-fast: false
+      matrix:
+        unity-version: [2022.3.52f1, 6000.3.22f1]
+        pipeline: [built-in, urp]
+    runs-on: [self-hosted, Windows, X64, unity]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Build runtime
+        run: npm run build
+      - name: Run Unity export and runtime contract
+        shell: pwsh
+        run: >-
+          ./scripts/verify-unity-contract.ps1
+          -UnityVersion '${{ matrix.unity-version }}'
+          -Pipeline '${{ matrix.pipeline }}'
+      - name: Upload tuple evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unity-contract-${{ matrix.unity-version }}-${{ matrix.pipeline }}
+          path: |
+            Temp/unity-contract-*-${{ matrix.pipeline }}/*.log
+            Temp/unity-contract-*-${{ matrix.pipeline }}/test-results.xml
+            Temp/unity-contract-*-${{ matrix.pipeline }}/interop-export/manifest.json
+            Temp/unity-contract-*-${{ matrix.pipeline }}/interop-export/runtime-manifest.json

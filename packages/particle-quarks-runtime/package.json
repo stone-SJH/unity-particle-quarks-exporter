@@ -1,7 +1,14 @@
 {
   "name": "unity-particle-quarks-runtime",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stone-SJH/unity-particle-quarks-exporter.git",
+    "directory": "packages/particle-quarks-runtime"
+  },
+  "homepage": "https://github.com/stone-SJH/unity-particle-quarks-exporter/tree/main/packages/particle-quarks-runtime",
+  "bugs": "https://github.com/stone-SJH/unity-particle-quarks-exporter/issues",
   "engines": {
     "node": ">=18.18.0"
   },
@@ -26,6 +33,7 @@
   ],
   "scripts": {
     "build": "vite build && tsc -p tsconfig.build.json --emitDeclarationOnly",
+    "prepack": "npm run typecheck && npm test && npm run build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
   },

@@ -1,0 +1,117 @@
+{
+    "schemaVersion": "unity_particle_quarks_conversion.report.v1",
+    "exporterVersion": "0.3.3",
+    "unityVersion": "2022.3.52f1",
+    "effectId": "interop-effect",
+    "sourcePrefabPath": "Assets/__UnityParticleQuarksInterop/InteropEffect.prefab",
+    "sourceFingerprint": "40c66eb77b5ea047e5d4fbbcbfb781eaf2788369c53d087400b85f6e3693410e",
+    "mode": "strict",
+    "target": "default",
+    "sourceRenderPipeline": "default",
+    "status": "ready",
+    "runtimeProfile": "extended",
+    "unknownCustomShaderPolicy": "require-profile",
+    "publicationBlocked": false,
+    "runtimeTier": "paired",
+    "extensionsUsed": [
+        {
+            "id": "unity_particle_paired_semantics",
+            "version": "1"
+        }
+    ],
+    "extensionsRequired": [
+        {
+            "id": "unity_particle_paired_semantics",
+            "version": "1"
+        }
+    ],
+    "particleSystems": [
+        {
+            "path": "InteropEffect",
+            "status": "ready",
+            "runtimeProfile": "extended",
+            "runtimeTier": "paired",
+            "mapped": [
+                "colorSpace.gammaPassThrough",
+                "emission.bursts",
+                "emission.rateOverDistance",
+                "emission.rateOverTime",
+                "main.duration",
+                "main.loop",
+                "main.maxParticles.runtimeCapacity",
+                "main.prewarm",
+                "main.scalingMode.local",
+                "main.simulationSpeed.identity",
+                "main.startColor",
+                "main.startColor.gradient.normalizedEmitterTimeRuntime",
+                "main.startColor.projectDefaultGradientColorSpace",
+                "main.startLifetime",
+                "main.startRotation",
+                "main.startSize",
+                "main.startSpeed",
+                "material.alpha.baseTexture",
+                "material.base",
+                "material.blend.metadata",
+                "material.doubleSide",
+                "material.mainTexture",
+                "material.mainTexture.sampler",
+                "material.shaderProfile.builtin.particleAlphaBlended",
+                "material.softParticles.legacyInvFade",
+                "material.tintColor.legacyDouble",
+                "renderer.alignment.view",
+                "renderer.billboard",
+                "shape.cone"
+            ],
+            "approximated": [
+                "main.maxParticles.stockUnboundedFallback",
+                "main.startColor.gradient.stockAbsoluteTimeFallback",
+                "material.shader.meshBasicSubset",
+                "material.softParticles"
+            ],
+            "unsupported": [],
+            "fatalUnsupported": [],
+            "nonBlockingUnsupported": [],
+            "inactive": [
+                "main.startDelay",
+                "renderer.pivot"
+            ],
+            "shaderResolutionFailures": [],
+            "shaderProfileGaps": [],
+            "materialProfiles": [
+                {
+                    "materialSlot": "renderer",
+                    "materialName": "InteropMaterial",
+                    "materialAssetPath": "Assets/__UnityParticleQuarksInterop/InteropMaterial.mat",
+                    "sourceShader": "Legacy Shaders/Particles/Alpha Blended",
+                    "profileId": "builtin.particleAlphaBlended",
+                    "profileVersion": "v1",
+                    "runtimeTier": "stock",
+                    "fidelity": "approx",
+                    "blendMode": "stock",
+                    "alphaClip": false,
+                    "softParticles": true,
+                    "doubleSided": true,
+                    "consumesParticleColor": true,
+                    "meshPbr": false,
+                    "resolvedProperties": [
+                        "_MainTex",
+                        "_TintColor",
+                        "_InvFade"
+                    ],
+                    "missingProperties": [],
+                    "unmappedProperties": [],
+                    "conflicts": []
+                }
+            ],
+            "warnings": [
+                "Soft particles preserve the source fade-distance formula but still require a compatible browser depth texture and matching eye-depth reconstruction.",
+                "The Unity shader is reduced to the documented unlit texture, tint, alpha-test, culling, and basic blend subset represented by Three MeshBasicMaterial.",
+                "Unity Gamma particle colors, material tint, and texture bytes use raw pass-through. Exported textures use Three NoColorSpace and the paired SDK restores floating-point material RGBA because Quarks 0.17.1 particle_frag has no colorspace_fragment.",
+                "Unity Start Color Gradient evaluates normalized emitter duration. The paired SDK normalizes Quarks' absolute emission time; stock Quarks playback remains an explicit absolute-time fallback.",
+                "Unity maxParticles is enforced by the paired SDK runtime for regular emission, bursts, prewarm, and subemission. Stock Quarks playback remains explicitly unbounded."
+            ]
+        }
+    ],
+    "shaderProfileGaps": [],
+    "errors": []
+}

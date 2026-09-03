@@ -17,6 +17,11 @@ export const UNITY_PARTICLE_PAIRED_SEMANTICS_EXTENSION: Readonly<VfxExtensionDes
 });
 
 export function validateVfxManifest(value: unknown): VfxManifest {
+  if (isRecord(value) && value.schemaVersion === 'unity_particle_quarks_pipeline.manifest.v1') {
+    throw new Error(
+      'VFX pipeline manifest is not runtime-loadable. Load the generated runtime-manifest.json instead.'
+    );
+  }
   if (!isRecord(value) || typeof value.schemaVersion !== 'string' ||
       !RUNTIME_MANIFEST_SCHEMAS.has(value.schemaVersion) || !Array.isArray(value.effects)) {
     throw new Error(
